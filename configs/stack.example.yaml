@@ -1,0 +1,47 @@
+# bot-ctl 部署栈示例配置（stack.yaml）
+# 所有字段默认按官方配置；留空/删除即使用内置默认。
+version: "1"
+project_name: bot-ctl
+install_dir: /opt/bot-ctl
+
+services:
+  snowluma:
+    name: snowluma
+    enabled: true
+    image: ghcr.io/snowluma/snowluma
+    tag: latest
+    network: bot-ctl-net
+    # OneBot 端口默认仅容器网络可达（不发布到宿主机）
+    ports:
+      - { host: 127.0.0.1, host_port: 3000, container: 3000, protocol: tcp, exposed: false }
+      - { host: 127.0.0.1, host_port: 3001, container: 3001, protocol: tcp, exposed: false }
+    environment: {}
+
+  napcat:
+    name: napcat
+    enabled: false
+    image: mlikiowa/napcat-docker
+    tag: latest
+    network: bot-ctl-net
+    environment: {}
+
+  astrbot:
+    name: astrbot
+    enabled: true
+    image: soulter/astrbot
+    tag: latest
+    network: bot-ctl-net
+    # 仅暴露 Web 管理端口
+    ports:
+      - { host: 127.0.0.1, host_port: 6185, container: 6185, protocol: tcp, exposed: true }
+    environment: {}
+
+# QQ 资源共享：仅共享下载的资源文件，不共享隐私数据
+resource:
+  enabled: true
+  source: snowluma            # 资源来源框架（snowluma / napcat）
+  bridge_image: botctl/qq-resource-bridge
+  bridge_tag: latest
+  max_file_size: 104857600    # 100MB
+  allowed_kinds: [image, video, audio, file]
+  retention_days: 7

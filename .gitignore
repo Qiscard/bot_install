@@ -1,0 +1,22 @@
+# 构建产物
+bin/
+dist/
+*.exe
+
+# Go
+vendor/
+
+# 运行时生成
+stack.yaml
+state.json
+docker-compose.yml
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# 本地工具状态（安全扫描 / 上下文树），不入库
+.mimosa/
+.brv/
