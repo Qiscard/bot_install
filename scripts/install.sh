@@ -5,7 +5,7 @@ set -euo pipefail
 
 REPO_GITHUB="Qiscard/bot_install"
 REPO_GITEE="qiscard/bot_install"
-VERSION="${BOTCTL_VERSION:-v0.1.2}"
+VERSION="${BOTCTL_VERSION:-v0.1.3}"
 SOURCE="${BOTCTL_SOURCE:-}"
 INSTALL_BIN="${BOTCTL_BIN_DIR:-/usr/local/bin}"
 BIN_NAME="bot-ctl"
@@ -107,6 +107,28 @@ fetch_release() {
   install_binary "$tmp/$BIN_NAME"
 }
 
+write_state() {
+  local state_dir="${BOTCTL_STATE_DIR:-/etc/bot-ctl}"
+  local state_file="$state_dir/install.json"
+  local content
+  content="$(cat <<EOF
+{
+  "source": "${SOURCE}",
+  "version": "${VERSION}",
+  "binary": "${INSTALL_BIN}/${BIN_NAME}",
+  "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+EOF
+)"
+  if [ -w "$state_dir" ] || mkdir -p "$state_dir" 2>/dev/null; then
+    printf '%s\n' "$content" > "$state_file"
+  else
+    sudo mkdir -p "$state_dir"
+    printf '%s\n' "$content" | sudo tee "$state_file" >/dev/null
+  fi
+  info "升级状态已写入 $state_file"
+}
+
 install_binary() {
   local src="$1"
   if [ -w "$INSTALL_BIN" ]; then
@@ -120,6 +142,7 @@ install_binary() {
 main() {
   choose_source
   fetch_release
+  write_state
   cat <<EOF
 
 安装完成。
