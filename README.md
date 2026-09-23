@@ -13,22 +13,60 @@ Linux 专用的 Docker TUI 控制台，用一条命令完成 QQ 机器人框架�
 - **QQ 资源共享桥**：仅把下载的图片/视频/语音/文件搬运到独立共享卷 `qq-resources`，AstrBot 以只读方式挂载；登录态、Cookie、数据库、配置等隐私数据绝不外泄。
 - **国内网络友好**：安装脚本支持 GitHub / Gitee / 离线三种源，先校验 SHA256 再执行。
 
-## 安装
+## 一键安装
 
-推荐先下载校验，再本地执行（不要把下载直接管道给解释器）：
+服务器只需 Docker，不需要安装 Go。以下命令会下载对应架构的静态二进制和 SHA256 校验文件，校验通过后安装到 `/usr/local/bin/bot-ctl`。
+
+### GitHub
 
 ```bash
-curl -fsSLO https://<host>/install.sh
-curl -fsSLO https://<host>/install.sh.sha256
-sha256sum -c install.sh.sha256 && bash install.sh
+set -euo pipefail
+cd /tmp
+arch="$(uname -m)"
+case "$arch" in
+  x86_64|amd64) asset="bot-ctl_linux_amd64.tar.gz" ;;
+  aarch64|arm64) asset="bot-ctl_linux_arm64.tar.gz" ;;
+  *) echo "不支持的架构: $arch" >&2; exit 1 ;;
+esac
+base="https://github.com/Qiscard/bot_install/releases/download/v0.1.0"
+curl -fsSLO "$base/$asset"
+curl -fsSLO "$base/$asset.sha256"
+sha256sum -c "$asset.sha256"
+tar -xzf "$asset"
+sudo install -m 0755 bot-ctl /usr/local/bin/bot-ctl
+bot-ctl version
 ```
 
-按源选择：
+### Gitee
+
+仓库当前为私有仓库，下载附件前需先设置具有仓库读取权限的 `GITEE_TOKEN`：
 
 ```bash
-BOTCTL_SOURCE=gitee bash install.sh      # 国内走 Gitee
-BOTCTL_VERSION=v1.2.0 bash install.sh    # 指定版本
-BOTCTL_SOURCE=offline BOTCTL_OFFLINE=./bot-ctl bash install.sh  # 离线二进制
+set -euo pipefail
+cd /tmp
+: "${GITEE_TOKEN:?请先 export GITEE_TOKEN=你的Gitee私人令牌}"
+arch="$(uname -m)"
+case "$arch" in
+  x86_64|amd64) asset="bot-ctl_linux_amd64.tar.gz" ;;
+  aarch64|arm64) asset="bot-ctl_linux_arm64.tar.gz" ;;
+  *) echo "不支持的架构: $arch" >&2; exit 1 ;;
+esac
+base="https://gitee.com/api/v5/repos/qiscard/bot_install/releases/tags/v0.1.0"
+curl -fsSL -H "Authorization: token ${GITEE_TOKEN}" \
+  -o "$asset" "$base/$asset"
+curl -fsSL -H "Authorization: token ${GITEE_TOKEN}" \
+  -o "$asset.sha256" "$base/$asset.sha256"
+sha256sum -c "$asset.sha256"
+tar -xzf "$asset"
+sudo install -m 0755 bot-ctl /usr/local/bin/bot-ctl
+bot-ctl version
+```
+
+### 其他安装方式
+
+```bash
+BOTCTL_VERSION=v0.1.0 bash install.sh                      # 指定版本
+BOTCTL_SOURCE=offline BOTCTL_OFFLINE=./bot-ctl bash install.sh  # 使用本地二进制
 ```
 
 ## 使用
