@@ -25,6 +25,8 @@ func (m Model) View() string {
 		b.WriteString(m.viewVersions())
 	case stepResource:
 		b.WriteString(m.viewResource())
+	case stepPorts:
+		b.WriteString(m.viewPorts())
 	case stepReview:
 		b.WriteString(m.viewReview())
 	case stepApply:
@@ -151,6 +153,32 @@ func (m Model) viewResource() string {
 	return b.String()
 }
 
+func (m Model) viewPorts() string {
+	var b strings.Builder
+	b.WriteString(fieldLabelStyle.Render("端口发布") + "\n\n")
+	b.WriteString(subtitleStyle.Render("  默认公开以下端口。空格可关闭；6199 由 AstrBot 提供，SnowLuma/NapCat 不需要开放。") + "\n\n")
+	for i, item := range m.portItems {
+		cursor := "  "
+		if i == m.portCursor {
+			cursor = "▸ "
+		}
+		box := "[ ]"
+		if item.Exposed {
+			box = checkedStyle.Render("[✓]")
+		}
+		label := fmt.Sprintf("%s%s %s  %d -> %d", cursor, box, item.Service, item.HostPort, item.Container)
+		if item.Custom {
+			label += "  自定义"
+		}
+		b.WriteString(label + "\n")
+	}
+	if m.customActive {
+		b.WriteString("\n  自定义端口: " + m.customInput.View() + "\n")
+	}
+	b.WriteString("\n" + helpStyle.Render("空格 开关 · a 添加自定义端口 · 回车 下一步"))
+	return b.String()
+}
+
 func (m Model) viewReview() string {
 	var b strings.Builder
 	b.WriteString(fieldLabelStyle.Render("确认部署方案") + "\n\n")
@@ -174,6 +202,12 @@ func (m Model) viewReview() string {
 		}
 		fmt.Fprintf(body, "  • %-20s %s:%s\n", it.Label, svc.Image, svc.Tag)
 		fmt.Fprintf(body, "    版本规格: %s\n", versionKindLabel(ver))
+	}
+	body.WriteString("\n公开端口:\n")
+	for _, item := range m.portItems {
+		if item.Exposed {
+			fmt.Fprintf(body, "  • %s %d -> %d\n", item.Service, item.HostPort, item.Container)
+		}
 	}
 	if m.stack.Resource != nil && m.stack.Resource.Enabled {
 		body.WriteString("\nQQ 资源共享: 启用\n")

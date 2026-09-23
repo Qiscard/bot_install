@@ -13,20 +13,23 @@ const (
 	// SnowLuma 官方默认
 	SnowLumaImage    = "motricseven7/snowluma"
 	SnowLumaTag      = "latest"
-	SnowLumaHTTPPort = 3000 // OneBot HTTP
-	SnowLumaWSPort   = 3001 // OneBot 正向 WS
+	SnowLumaHTTPPort = 3000 // OneBot HTTP，仅容器网络
+	SnowLumaWSPort   = 3001 // OneBot 正向 WS，仅容器网络
+	SnowLumaWebPort  = 6081 // WebUI
+	SnowLumaVNCPort  = 5099 // noVNC
 
 	// NapCat 官方默认
 	NapCatImage    = "m.daocloud.io/docker.io/mlikiowa/napcat-docker"
 	NapCatTag      = "latest"
-	NapCatHTTPPort = 3000
-	NapCatWSPort   = 3001
-	NapCatWebUI    = 6099
+	NapCatHTTPPort = 3000 // OneBot HTTP，仅容器网络
+	NapCatWSPort   = 3001 // OneBot 正向 WS，仅容器网络
+	NapCatWebUI    = 6099 // WebUI
 
 	// AstrBot 官方默认
 	AstrBotImage    = "m.daocloud.io/docker.io/soulter/astrbot"
 	AstrBotTag      = "latest"
-	AstrBotWebPort  = 6185
+	AstrBotWebPort  = 6185 // WebUI
+	AstrBotWSPort   = 6199 // 平台反向 WS 服务端
 	AstrBotDataDir  = "/AstrBot/data" // 官方默认，不做调控
 
 	// 资源桥
@@ -48,6 +51,8 @@ func DefaultSnowLuma() *model.ServiceConfig {
 		Tag:     SnowLumaTag,
 		Network: DefaultNetwork,
 		Ports: []model.PortMapping{
+			{Host: "0.0.0.0", HostPort: SnowLumaWebPort, Container: SnowLumaWebPort, Protocol: "tcp", Exposed: true},
+			{Host: "0.0.0.0", HostPort: SnowLumaVNCPort, Container: SnowLumaVNCPort, Protocol: "tcp", Exposed: true},
 			{Host: LoopbackBind, HostPort: SnowLumaHTTPPort, Container: SnowLumaHTTPPort, Protocol: "tcp", Exposed: false},
 			{Host: LoopbackBind, HostPort: SnowLumaWSPort, Container: SnowLumaWSPort, Protocol: "tcp", Exposed: false},
 		},
@@ -64,7 +69,7 @@ func DefaultNapCat() *model.ServiceConfig {
 		Tag:     NapCatTag,
 		Network: DefaultNetwork,
 		Ports: []model.PortMapping{
-			{Host: LoopbackBind, HostPort: NapCatWebUI, Container: NapCatWebUI, Protocol: "tcp", Exposed: false},
+			{Host: "0.0.0.0", HostPort: NapCatWebUI, Container: NapCatWebUI, Protocol: "tcp", Exposed: true},
 			{Host: LoopbackBind, HostPort: NapCatHTTPPort, Container: NapCatHTTPPort, Protocol: "tcp", Exposed: false},
 			{Host: LoopbackBind, HostPort: NapCatWSPort, Container: NapCatWSPort, Protocol: "tcp", Exposed: false},
 		},
@@ -81,7 +86,8 @@ func DefaultAstrBot() *model.ServiceConfig {
 		Tag:     AstrBotTag,
 		Network: DefaultNetwork,
 		Ports: []model.PortMapping{
-			{Host: LoopbackBind, HostPort: AstrBotWebPort, Container: AstrBotWebPort, Protocol: "tcp", Exposed: true},
+			{Host: "0.0.0.0", HostPort: AstrBotWebPort, Container: AstrBotWebPort, Protocol: "tcp", Exposed: true},
+			{Host: "0.0.0.0", HostPort: AstrBotWSPort, Container: AstrBotWSPort, Protocol: "tcp", Exposed: true},
 		},
 		Environment: map[string]string{},
 	}

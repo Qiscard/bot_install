@@ -18,10 +18,20 @@ const (
 	stepInstallDir
 	stepVersions
 	stepResource
+	stepPorts
 	stepReview
 	stepApply
 	stepDone
 )
+
+// portItem 是一个可开关的端口发布项。
+type portItem struct {
+	Service   string
+	HostPort  int
+	Container int
+	Exposed   bool
+	Custom    bool
+}
 
 // frameworkItem 多选列表项
 type frameworkItem struct {
@@ -64,6 +74,12 @@ type Model struct {
 	resourceSource  int // 0 = 第一个可作为来源的框架
 	resourceCursor  int
 
+	// 端口设置
+	portItems    []portItem
+	portCursor   int
+	customInput  textinput.Model
+	customActive bool
+
 	// 生成结果
 	stack           *model.StackConfig
 	composePath     string
@@ -89,12 +105,18 @@ func New(store *config.Store, reg *adapter.Registry) Model {
 	di.CharLimit = 256
 	di.Width = 20
 
+	custom := textinput.New()
+	custom.Placeholder = "服务名:宿主机端口:容器端口"
+	custom.CharLimit = 64
+	custom.Width = 32
+
 	return Model{
 		step:     stepDoctor,
 		registry: reg,
 		store:    store,
-		items:    items,
-		dirInput: di,
+		items:       items,
+		dirInput:    di,
+		customInput: custom,
 	}
 }
 

@@ -61,6 +61,8 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.keyVersions(msg)
 	case stepResource:
 		return m.keyResource(msg)
+	case stepPorts:
+		return m.keyPorts(msg)
 	case stepReview:
 		return m.keyReview(msg)
 	case stepDone:
@@ -160,8 +162,8 @@ func (m Model) keyVersions(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.canShareResources() {
 			m.step = stepResource
 		} else {
-			m.prepareReview()
-			m.step = stepReview
+			m.preparePorts()
+			m.step = stepPorts
 		}
 		return m, nil
 	case "tab", "down":
@@ -218,6 +220,52 @@ func (m Model) keyResource(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.resourceEnabled && !m.hasConsumer() {
 			m.errMsg = "已启用资源共享，但未选择消费方 AstrBot；仍可继续，桥会写入共享卷。"
 		}
+		m.preparePorts()
+		m.step = stepPorts
+	}
+	return m, nil
+}
+
+func (m Model) keyPorts(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.customActive {
+		switch msg.String() {
+		case "enter":
+			if err := m.addCustomPort(m.customInput.Value()); err != nil {
+				m.errMsg = err.Error()
+				return m, nil
+			}
+			m.customInput.SetValue("")
+			m.customInput.Blur()
+			m.customActive = false
+			m.errMsg = ""
+			return m, nil
+		case "esc":
+			m.customInput.Blur()
+			m.customActive = false
+			return m, nil
+		}
+		var cmd tea.Cmd
+		m.customInput, cmd = m.customInput.Update(msg)
+		return m, cmd
+	}
+
+	switch msg.String() {
+	case "up", "k":
+		if m.portCursor > 0 {
+			m.portCursor--
+		}
+	case "down", "j":
+		if m.portCursor < len(m.portItems)-1 {
+			m.portCursor++
+		}
+	case " ":
+		if len(m.portItems) > 0 {
+			m.portItems[m.portCursor].Exposed = !m.portItems[m.portCursor].Exposed
+		}
+	case "a":
+		m.customActive = true
+		m.customInput.Focus()
+	case "enter":
 		m.prepareReview()
 		m.step = stepReview
 	}

@@ -1,6 +1,10 @@
 package tui
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/bot-ctl/bot-ctl/internal/config"
 	"github.com/bot-ctl/bot-ctl/internal/version"
 	"github.com/bot-ctl/bot-ctl/pkg/model"
@@ -29,6 +33,8 @@ func (m *Model) buildStack() *model.StackConfig {
 		applySpecToService(svc, spec)
 	}
 
+	applyPortChoices(st, m.portItems)
+
 	// 资源共享
 	st.Resource.Enabled = m.resourceEnabled
 	if m.resourceEnabled {
@@ -38,6 +44,74 @@ func (m *Model) buildStack() *model.StackConfig {
 }
 
 // applySpecToService 将版本规格落到服务配置
+func (m *Model) preparePorts() {
+	if len(m.portItems) > 0 {
+		return
+	}
+	defaults := map[model.FrameworkType][]portItem{
+		model.FrameworkAstrBot: {
+			{Service: "astrbot", HostPort: config.AstrBotWebPort, Container: config.AstrBotWebPort, Exposed: true},
+			{Service: "astrbot", HostPort: config.AstrBotWSPort, Container: config.AstrBotWSPort, Exposed: true},
+		},
+		model.FrameworkSnowLuma: {
+			{Service: "snowluma", HostPort: config.SnowLumaWebPort, Container: config.SnowLumaWebPort, Exposed: true},
+			{Service: "snowluma", HostPort: config.SnowLumaVNCPort, Container: config.SnowLumaVNCPort, Exposed: true},
+		},
+		model.FrameworkNapCat: {
+			{Service: "napcat", HostPort: config.NapCatWebUI, Container: config.NapCatWebUI, Exposed: true},
+		},
+	}
+	for _, item := range m.items {
+		if item.Checked {
+			m.portItems = append(m.portItems, defaults[item.Type]...)
+		}
+	}
+}
+
+func (m *Model) addCustomPort(raw string) error {
+	parts := strings.Split(strings.TrimSpace(raw), ":")
+	if len(parts) != 3 {
+		return fmt.Errorf("格式应为 服务名:宿主机端口:容器端口")
+	}
+	hostPort, err := strconv.Atoi(parts[1])
+	if err != nil || hostPort < 1 || hostPort > 65535 {
+		return fmt.Errorf("宿主机端口无效")
+	}
+	containerPort, err := strconv.Atoi(parts[2])
+	if err != nil || containerPort < 1 || containerPort > 65535 {
+		return fmt.Errorf("容器端口无效")
+	}
+	m.portItems = append(m.portItems, portItem{
+		Service: parts[0], HostPort: hostPort, Container: containerPort, Exposed: true, Custom: true,
+	})
+	return nil
+}
+
+func applyPortChoices(st *model.StackConfig, items []portItem) {
+	for _, item := range items {
+		svc := st.Services[item.Service]
+		if svc == nil {
+			continue
+		}
+		replaced := false
+		for i := range svc.Ports {
+			if svc.Ports[i].Container == item.Container && svc.Ports[i].HostPort == item.HostPort {
+				svc.Ports[i].Exposed = item.Exposed
+				if item.Exposed {
+					svc.Ports[i].Host = "0.0.0.0"
+				}
+				replaced = true
+			}
+		}
+		if !replaced {
+			svc.Ports = append(svc.Ports, model.PortMapping{
+				Host: "0.0.0.0", HostPort: item.HostPort, Container: item.Container,
+				Protocol: "tcp", Exposed: item.Exposed,
+			})
+		}
+	}
+}
+
 func applySpecToService(svc *model.ServiceConfig, spec version.Spec) {
 	switch spec.Kind {
 	case version.SourceLatest:
