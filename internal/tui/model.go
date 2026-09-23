@@ -87,7 +87,7 @@ func New(store *config.Store, reg *adapter.Registry) Model {
 	di.Placeholder = config.DefaultInstallDir
 	di.SetValue(config.DefaultInstallDir)
 	di.CharLimit = 256
-	di.Width = 48
+	di.Width = 20
 
 	return Model{
 		step:     stepDoctor,

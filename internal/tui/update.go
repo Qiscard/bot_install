@@ -12,6 +12,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
+		if m.width > 8 {
+			fieldWidth := m.width - 8
+			if fieldWidth > 48 {
+				fieldWidth = 48
+			}
+			m.dirInput.Width = fieldWidth
+			for i := range m.verInputs {
+				m.verInputs[i].Width = fieldWidth
+			}
+		}
 		return m, nil
 
 	case doctorMsg:
@@ -123,9 +133,9 @@ func (m *Model) initVersionInputs() {
 			continue
 		}
 		ti := textinput.New()
-		ti.Placeholder = "latest（回车默认最新，可填 v1.10.0 或直链）"
+		ti.Placeholder = "latest（回车默认最新）"
 		ti.CharLimit = 512
-		ti.Width = 56
+		ti.Width = 20
 		m.verInputs = append(m.verInputs, ti)
 	}
 	m.verIndex = 0
