@@ -15,59 +15,42 @@ Linux 专用的 Docker TUI 控制台，用一条命令完成 QQ 机器人框架�
 
 ## 一键安装
 
-服务器只需 Docker，不需要安装 Go。以下命令会下载对应架构的静态二进制和 SHA256 校验文件，校验通过后安装到 `/usr/local/bin/bot-ctl`。
+服务器只需 Docker，不需要安装 Go。安装器会打开简易 TUI，依次选择下载源、版本、安装目录和框架，然后下载并校验 `bot-ctl`，生成 `stack.yaml`。
 
 ### GitHub
 
 ```bash
-set -euo pipefail
-cd /tmp
-arch="$(uname -m)"
-case "$arch" in
-  x86_64|amd64) asset="bot-ctl_linux_amd64.tar.gz" ;;
-  aarch64|arm64) asset="bot-ctl_linux_arm64.tar.gz" ;;
-  *) echo "不支持的架构: $arch" >&2; exit 1 ;;
-esac
-base="https://github.com/Qiscard/bot_install/releases/download/v0.1.0"
-curl -fsSLO "$base/$asset"
-curl -fsSLO "$base/$asset.sha256"
-sha256sum -c "$asset.sha256"
-tar -xzf "$asset"
-sudo install -m 0755 bot-ctl /usr/local/bin/bot-ctl
-bot-ctl version
+curl -fsSL -o install.sh https://raw.githubusercontent.com/Qiscard/bot_install/main/scripts/install.sh && bash install.sh
 ```
 
 ### Gitee
 
-仓库当前为私有仓库，下载附件前需先设置具有仓库读取权限的 `GITEE_TOKEN`：
+Gitee 仓库当前为私有仓库，下载前先设置具有仓库读取权限的令牌：
 
 ```bash
-set -euo pipefail
-cd /tmp
-: "${GITEE_TOKEN:?请先 export GITEE_TOKEN=你的Gitee私人令牌}"
-arch="$(uname -m)"
-case "$arch" in
-  x86_64|amd64) asset="bot-ctl_linux_amd64.tar.gz" ;;
-  aarch64|arm64) asset="bot-ctl_linux_arm64.tar.gz" ;;
-  *) echo "不支持的架构: $arch" >&2; exit 1 ;;
-esac
-base="https://gitee.com/api/v5/repos/qiscard/bot_install/releases/tags/v0.1.0"
+export GITEE_TOKEN='你的Gitee私人令牌'
 curl -fsSL -H "Authorization: token ${GITEE_TOKEN}" \
-  -o "$asset" "$base/$asset"
-curl -fsSL -H "Authorization: token ${GITEE_TOKEN}" \
-  -o "$asset.sha256" "$base/$asset.sha256"
-sha256sum -c "$asset.sha256"
-tar -xzf "$asset"
-sudo install -m 0755 bot-ctl /usr/local/bin/bot-ctl
-bot-ctl version
+  -o install.sh \
+  https://gitee.com/api/v5/repos/qiscard/bot_install/contents/scripts/install.sh?ref=main \
+  && python -c "import json,pathlib; pathlib.Path('install.sh').write_bytes(__import__('base64').b64decode(json.load(open('install.sh'))['content']))" \
+  && bash install.sh
 ```
 
-### 其他安装方式
+安装器菜单支持：
+
+- 下载源：GitHub、Gitee、本地离线包
+- 版本：默认 `v0.1.0`
+- 项目目录：默认 `/opt/bot-ctl`
+- 框架多选：SnowLuma、NapCat、AstrBot
+- QQ 资源共享桥及资源来源
+
+非交互部署可预设环境变量：
 
 ```bash
-BOTCTL_VERSION=v0.1.0 bash install.sh                      # 指定版本
-BOTCTL_SOURCE=offline BOTCTL_OFFLINE=./bot-ctl bash install.sh  # 使用本地二进制
+BOTCTL_SOURCE=github BOTCTL_VERSION=v0.1.0 BOTCTL_DIR=/opt/bot-ctl bash install.sh
+BOTCTL_SOURCE=offline BOTCTL_OFFLINE=./bot-ctl bash install.sh
 ```
+
 
 ## 使用
 
