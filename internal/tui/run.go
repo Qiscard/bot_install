@@ -7,6 +7,7 @@ import (
 
 	"github.com/bot-ctl/bot-ctl/internal/adapter"
 	"github.com/bot-ctl/bot-ctl/internal/config"
+	"github.com/bot-ctl/bot-ctl/internal/credentials"
 	"github.com/bot-ctl/bot-ctl/internal/docker"
 	"github.com/bot-ctl/bot-ctl/pkg/model"
 
@@ -60,5 +61,5 @@ func deploy(st *model.StackConfig) error {
 		return fmt.Errorf("启动服务失败: %w", err)
 	}
 	fmt.Fprintln(os.Stdout, "✓ 部署完成。使用 `bot-ctl logs` 查看日志，`bot-ctl status` 查看状态。")
-	return nil
+	return credentials.CaptureInitial(st.InstallDir)
 }

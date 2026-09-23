@@ -32,6 +32,7 @@ func NewRootCmd() *cobra.Command {
 		newStatusCmd(),
 		newBridgeCmd(),
 		newUpgradeCmd(),
+		newPasswordCmd(),
 		newVersionCmd(),
 	)
 	return root

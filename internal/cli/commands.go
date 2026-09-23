@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bot-ctl/bot-ctl/internal/config"
+	"github.com/bot-ctl/bot-ctl/internal/credentials"
 	"github.com/bot-ctl/bot-ctl/internal/docker"
 	"github.com/bot-ctl/bot-ctl/internal/version"
 
@@ -68,7 +69,10 @@ func newUpCmd() *cobra.Command {
 			if err := prov.Pull(cmd.Context()); err != nil {
 				return err
 			}
-			return prov.Up(cmd.Context())
+			if err := prov.Up(cmd.Context()); err != nil {
+				return err
+			}
+			return credentials.CaptureInitial(st.InstallDir)
 		},
 	}
 }
