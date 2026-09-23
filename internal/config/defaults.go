@@ -11,20 +11,20 @@ const (
 	DefaultNetwork     = "bot-ctl-net"
 
 	// SnowLuma 官方默认
-	SnowLumaImage    = "ghcr.io/snowluma/snowluma"
+	SnowLumaImage    = "motricseven7/snowluma"
 	SnowLumaTag      = "latest"
 	SnowLumaHTTPPort = 3000 // OneBot HTTP
 	SnowLumaWSPort   = 3001 // OneBot 正向 WS
 
 	// NapCat 官方默认
-	NapCatImage    = "mlikiowa/napcat-docker"
+	NapCatImage    = "m.daocloud.io/docker.io/mlikiowa/napcat-docker"
 	NapCatTag      = "latest"
 	NapCatHTTPPort = 3000
 	NapCatWSPort   = 3001
 	NapCatWebUI    = 6099
 
 	// AstrBot 官方默认
-	AstrBotImage    = "soulter/astrbot"
+	AstrBotImage    = "m.daocloud.io/docker.io/soulter/astrbot"
 	AstrBotTag      = "latest"
 	AstrBotWebPort  = 6185
 	AstrBotDataDir  = "/AstrBot/data" // 官方默认，不做调控

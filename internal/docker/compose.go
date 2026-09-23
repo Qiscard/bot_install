@@ -19,6 +19,8 @@ type composeFile struct {
 type composeService struct {
 	Image       string            `yaml:"image"`
 	ContainerName string          `yaml:"container_name,omitempty"`
+	Entrypoint  []string          `yaml:"entrypoint,omitempty"`
+	Command     []string          `yaml:"command,omitempty"`
 	Restart     string            `yaml:"restart,omitempty"`
 	Ports       []string          `yaml:"ports,omitempty"`
 	Volumes     []string          `yaml:"volumes,omitempty"`
@@ -117,8 +119,10 @@ func buildBridgeService(st *model.StackConfig) composeService {
 		source = "snowluma"
 	}
 	return composeService{
-		Image:         fmt.Sprintf("%s:%s", st.Resource.BridgeImage, st.Resource.BridgeTag),
+		Image:         "m.daocloud.io/docker.io/library/alpine:3.20",
 		ContainerName: fmt.Sprintf("%s-qq-resource-bridge", st.ProjectName),
+		Entrypoint:    []string{"/usr/local/bin/bot-ctl"},
+		Command:       []string{"bridge", "serve"},
 		Restart:       "unless-stopped",
 		Networks:      []string{config.DefaultNetwork},
 		DependsOn:     []string{source},
@@ -130,6 +134,7 @@ func buildBridgeService(st *model.StackConfig) composeService {
 			"BRIDGE_RETENTION_DAYS": fmt.Sprintf("%d", st.Resource.RetentionDays),
 		},
 		Volumes: []string{
+			"/usr/local/bin/bot-ctl:/usr/local/bin/bot-ctl:ro",
 			fmt.Sprintf("%s:/output", config.QQResourceVol),
 		},
 	}

@@ -5,7 +5,7 @@ set -euo pipefail
 
 REPO_GITHUB="Qiscard/bot_install"
 REPO_GITEE="qiscard/bot_install"
-VERSION="${BOTCTL_VERSION:-v0.1.1}"
+VERSION="${BOTCTL_VERSION:-v0.1.2}"
 SOURCE="${BOTCTL_SOURCE:-}"
 INSTALL_BIN="${BOTCTL_BIN_DIR:-/usr/local/bin}"
 BIN_NAME="bot-ctl"

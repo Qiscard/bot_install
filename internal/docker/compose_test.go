@@ -41,6 +41,12 @@ func TestGenerateComposeBasic(t *testing.T) {
 	if !strings.Contains(s, config.QQResourceMount+":ro") {
 		t.Error("AstrBot 未以只读方式挂载共享目录")
 	}
+	if !strings.Contains(s, "alpine:3.20") || !strings.Contains(s, "/usr/local/bin/bot-ctl:/usr/local/bin/bot-ctl:ro") {
+		t.Error("资源桥未复用已安装的 bot-ctl")
+	}
+	if strings.Contains(s, "botctl/qq-resource-bridge") {
+		t.Error("不应拉取尚未发布的资源桥镜像")
+	}
 	// AstrBot Web 端口暴露
 	if !strings.Contains(s, "6185") {
 		t.Error("AstrBot Web 端口未暴露")

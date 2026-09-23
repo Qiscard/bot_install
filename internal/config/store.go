@@ -50,7 +50,30 @@ func (s *Store) LoadStack() (*model.StackConfig, error) {
 	if err := yaml.Unmarshal(data, &st); err != nil {
 		return nil, fmt.Errorf("解析 stack 配置失败: %w", err)
 	}
+	normalizeStack(&st)
 	return &st, nil
+}
+
+// normalizeStack 将旧版本保存的镜像迁移到当前默认可拉取镜像。
+func normalizeStack(st *model.StackConfig) {
+	defaults := map[string]string{
+		"snowluma": SnowLumaImage,
+		"napcat":   NapCatImage,
+		"astrbot":  AstrBotImage,
+	}
+	legacy := map[string]map[string]struct{}{
+		"snowluma": {"ghcr.io/snowluma/snowluma": {}},
+		"napcat":   {"mlikiowa/napcat-docker": {}},
+		"astrbot":  {"soulter/astrbot": {}},
+	}
+	for name, svc := range st.Services {
+		if svc == nil {
+			continue
+		}
+		if _, ok := legacy[name][svc.Image]; ok {
+			svc.Image = defaults[name]
+		}
+	}
 }
 
 // SaveStack 保存栈配置
